@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="Start your development with a Dashboard for Bootstrap 4.">
+  <meta name="author" content="Creative Tim">
+  <title>Shop</title>
+  <!-- Favicon -->
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}" type="image/png">
+  <!-- Fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700">
+  <!-- Icons -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/nucleo/css/nucleo.css') }}" type="text/css">
+  <!-- <link rel="stylesheet" href="{{ url_for('static', filename='vendor/@fortawesome/fontawesome-free/css/all.min.css') }}" type="text/css"> -->
+  <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css"/>
+  <!-- Page plugins -->
+  <!-- Argon CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/argon.css') }}" type="text/css">
+
+  <script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" type="text/css">
+  <script>
+    function confirmCheck(){
+      if($(this).attr('id') == 'chk_all'){
+        let checkbox = $('.check_box');
+        if($(this).is(':checked')){
+          for(let i=0; i<checkbox.length; i++){
+            checkbox[i].checked = true;
+          }
+        }else{
+          for(let i=0; i<checkbox.length; i++){
+            checkbox[i].checked = false;
+          }
+        }
+      }else{
+        let checkbox = $('.check_box');
+        let all_check = true;
+
+        for(let i=0; i<checkbox.length; i++){
+          if(!checkbox[i].checked){ all_check = false; }
+        }
+
+        if(all_check){
+          $('#chk_all').prop('checked', true);
+        }else{
+          $('#chk_all').prop('checked', false);
+        }
+      }
+    }
+
+    function shopModBtnClick(){
+      let shop_idx = $(this).parents('tr').find('.shop_idx').val();
+
+      location.href = `/shop_modify?shop_idx=${shop_idx}`;
+    }
+    
+    function shopDelBtnClick(){
+      let shop_idx = '';
+      if($(this).attr('id') == 'select_del'){
+        let check_box = $('.check_box:checked')
+        if(check_box.length < 1){
+          alert('삭제할 쇼핑몰을 선택해주세요.');
+          return
+        }else{
+          if(confirm('삭제하시겠습니까?')){
+            for(let i=0; i<check_box.length; i++){
+              shop_idx += i == 0 ? $(check_box[i]).parents('tr').find('.shop_idx').val() : ', ' + $(check_box[i]).parents('tr').find('.shop_idx').val();
+            }
+          }else{
+            return;
+          }
+        }
+      }else{
+        if(confirm('삭제하시겠습니까?')){
+          shop_idx = $(this).parents('tr').find('.shop_idx').val();
+        }else{
+          return;
+        }
+      }
+
+      $.ajax({
+        url: '/shop_delete',
+        type: 'POST',
+        dataType: 'HTML',
+        data: {
+          shop_idx: shop_idx,
+        },
+        success: function(data){
+          if(data){
+            location.reload()
+          }
+        }
+      })
+    }
+
+    function shopListInit(){
+      $('input[type="checkbox"]').on('click', confirmCheck);
+      
+      $('.modify_btn').on('click', shopModBtnClick)
+      $('.delete_btn').on('click', shopDelBtnClick)
+    }
+
+    $(document).ready(function(){
+      shopListInit()
+    })
+  </script>
+</head>
+
+<body>
+  <nav class="sidenav navbar navbar-vertical  fixed-left  navbar-expand-xs navbar-light bg-white" id="sidenav-main">
+    <div class="scrollbar-inner">
+      <div class="sidenav-header  align-items-center">
+        <a class="navbar-brand" href="/">crawling</a>
+      </div>
+      <div class="navbar-inner">
+        <div class="collapse navbar-collapse" id="sidenav-collapse-main">
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link active" href="/shop_list">
+                <i class="ni ni-bag-17 text-default"></i>
+                <span class="nav-link-text">쇼핑몰</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/product_list">
+                <i class="ni ni-bullet-list-67 text-default"></i>
+                <span class="nav-link-text">상품</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <div class="main-content" id="panel">
+    <nav class="navbar navbar-top navbar-expand navbar-dark bg-default border-bottom">
+      <div class="container-fluid">
+        <div class="collapse navbar-collapse" id="navbarSupportedContent" style="flex-direction: row-reverse;">
+          <nav aria-label="breadcrumb" class="d-none d-md-inline-block">
+            <ol class="breadcrumb breadcrumb-links breadcrumb-dark" style="padding: 0.3rem 0.8rem;">
+              <li class="breadcrumb-item" style="color: #172b4d;"><i class="fas fa-home"></i></li>
+              <li class="breadcrumb-item" style="color: #172b4d;">쇼핑몰</li>
+              <li class="breadcrumb-item active" aria-current="page">쇼핑몰 리스트</li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </nav>
+    <div class="header bg-default pb-6">
+      <div class="container-fluid">
+        <div class="header-body">
+          <div class="row align-items-center py-4">
+            <form class="navbar-search navbar-search-light form-inline col-lg-6 col-7" id="navbar-search-main">
+              <!-- <div class="form-group mb-0">
+                <div class="input-group input-group-alternative input-group-merge">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                  </div>
+                  <input class="form-control" placeholder="Search" type="text">
+                </div>
+              </div>
+              <button type="button" class="close" data-action="search-close" data-target="#navbar-search-main" aria-label="Close">
+                <span aria-hidden="true">×</span>
+              </button> -->
+            </form>
+            <div class="col-lg-6 col-5 text-right">
+              <a href="/shop_add" class="btn btn-secondary">쇼핑몰 등록</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="container-fluid mt--6">
+      <div class="row">
+        <div class="col">
+          <div class="card">
+            <div class="card-header border-0">
+              <h3 class="mb-0" style="display: inline-block;">쇼핑몰</h3>
+              <button type="button" class="btn btn-outline-danger btn-sm delete_btn" id="select_del" style="float: right;">선택 삭제</button>
+            </div>
+            <div class="table-responsive">
+              <table class="table align-items-center table-flush">
+                <thead class="thead-light">
+                  <tr>
+                    <th class="text-center" scope="col" width="5%"><input type="checkbox" id="chk_all"></th>
+                    <th class="text-center" scope="col" width="10%">번호</th>
+                    <th class="text-center" scope="col" width="20%">이름</th>
+                    <th class="text-center" scope="col" width="40%">URL</th>
+                    <th class="text-center" scope="col" width="10%">등록일자</th>
+                    <th class="text-center" scope="col" width="15%"></th>
+                  </tr>
+                </thead>
+                <tbody class="list">
+                  {% if shop_list %}
+                    {% for shop in shop_list %}
+                    <tr>
+                      <td class="text-center"><input type="checkbox" class="check_box"></td>
+                      <td class="text-center">{{ shop_count - (((current_page - 1) * 20) + (loop.index - 1)) }}<input type="hidden" class="shop_idx" value="{{ shop['shop_idx'] }}" /></td>
+                      <td class="text-center">{{ shop['shop_name'] }}</td>
+                      <td><a href="{{ shop['shop_url'] }}" target="_blank">{{ shop['shop_url'] }}</a> </td>
+                      <td class="text-center">{{ shop['shop_regdate'] }}</td>
+                      <td class="text-center">
+                        <button type="button" class="btn btn-outline-primary btn-sm modify_btn">수정</button>
+                        <button type="button" class="btn btn-outline-danger btn-sm delete_btn">삭제</button>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  {% else %}
+                  <tr>
+                    <td colspan="6" class="text-center">쇼핑몰 없음</td>
+                  </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+            <div class="card-footer py-4">
+              <ul class="pagination justify-content-center mb-0">
+                {% if shop_list %}
+                <li class="page-item"><a class="page-link" href="{{ url_for('shop_list', page=1) }}"><i class="far fa-chevron-double-left"></i></a></li>
+                <li class="page-item
+                {% if current_page == 1 %}
+                disabled
+                {% endif %}
+                ">
+                  <a class="page-link" href="
+                  {% if current_page == 1 %}
+                  #
+                  {% else %}
+                  {{ url_for('shop_list', page=current_page - 1) }}
+                  {% endif %}
+                  "><i class="fas fa-angle-left"></i></a>
+                </li>
+                {% for i in range(start_paging, end_paging + 1) %}
+                  <li class="page-item 
+                  {% if i == current_page %}
+                  active
+                  {% endif %}
+                  "><a class="page-link" href="{{ url_for('shop_list', page=i) }}">{{ i }}</a></li>
+                {% endfor %}
+                <li class="page-item
+                {% if current_page == total_page %}
+                disabled
+                {% endif %}
+                ">
+                  <a class="page-link" href="
+                  {% if current_page == total_page %}
+                  #
+                  {% else %}
+                  {{ url_for('shop_list', page=current_page + 1) }}
+                  {% endif %}
+                  "><i class="fas fa-angle-right"></i></a>
+                </li>
+                <li class="page-item"><a class="page-link" href="{{ url_for('shop_list', page=total_page) }}"><i class="far fa-chevron-double-right"></i></a></li>
+                {% endif %}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Argon Scripts -->
+  <!-- Core -->
+  <script src="{{ url_for('static', filename='vendor/jquery/dist/jquery.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/js-cookie/js.cookie.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/jquery.scrollbar/jquery.scrollbar.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/jquery-scroll-lock/dist/jquery-scrollLock.min.js') }}"></script>
+  <!-- Optional JS -->
+  <script src="{{ url_for('static', filename='vendor/chart.js/dist/Chart.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/chart.js/dist/Chart.extension.js') }}"></script>
+  <!-- Argon JS -->
+  <script src="{{ url_for('static', filename='js/argon.js') }}"></script>
+</body>
+
+</html>

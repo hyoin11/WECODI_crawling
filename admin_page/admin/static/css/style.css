@@ -1,0 +1,107 @@
+.page-item.active .page-link {
+    border-color: #172b4d;
+    background-color: #172b4d;
+}
+table img {
+    width: 100%;
+}
+.card .table td, .card .table th {
+    padding-right: 1rem;
+    padding-left: 1rem;
+}
+td {
+    white-space: normal !important;
+    word-break: keep-all;
+}
+
+
+.toggle_btn {
+    cursor: pointer;
+    width: 60px;
+    height: 30px;
+    background: grey;
+    display: block;
+    position: relative;
+    border-radius: 15px;
+    margin-bottom: 0;
+}
+.toggle_btn:after {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    transition: 0.3s;
+    border-radius: 10px;
+}
+.toggle:checked + .toggle_btn {
+    background: #43a047;
+}
+.toggle:checked + .toggle_btn:after {
+    left: calc(100% - 5px);
+    transform: translateX(-100%);
+}
+.toggle_btn:active:after {
+    width: 50px;
+}
+
+
+.cate_wrap {
+    position: relative;
+}
+.cate_wrap + .cate_wrap {
+    margin-top: 0.5em;
+}
+.cate_input {
+    padding-right: 3em;
+    /* display: inline-block; */
+    float: right;
+    width: 89.5%;
+}
+.cate_input + .cate_input {
+    width: 79.5%;
+    float: right;
+}
+.cate_wrap select {
+    width: 10%;
+    display: inline-block;
+}
+.cate_delete {
+    position: absolute;
+    top: calc(((1.5em + 1.25rem + 5px)/2) - 12px);
+    right: 14px;
+}
+
+input + label {
+    margin: 0 auto;
+}
+
+.cate_list_wrap {
+    margin: 15px 0;
+}
+.cate_list_wrap span {
+    border: 1px solid #000;
+    padding: 5px 10px;
+    padding-right: 40px;
+    position: relative;
+    color: #000;
+    font-size: 0.9em;
+    margin-right: 5px;
+    background: #fff;
+}
+.cate_list_wrap span button {
+    border: 1px solid #000;
+    margin-left: 11px;
+    background: none;
+    font-size: 0.7em;
+    position: absolute;
+    top: 6px;
+}
+
+.wd33 {
+    width: 33%;
+    float: left;
+    margin-left: 0.5%;
+}

@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="Start your development with a Dashboard for Bootstrap 4.">
+  <meta name="author" content="Creative Tim">
+  <title>Product</title>
+  <!-- Favicon -->
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}" type="image/png">
+  <!-- Fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700">
+  <!-- Icons -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/nucleo/css/nucleo.css') }}" type="text/css">
+  <!-- <link rel="stylesheet" href="assets/vendor/@fortawesome/fontawesome-free/css/all.min.css" type="text/css"> -->
+  <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css"/>
+  <!-- Page plugins -->
+  <!-- Argon CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/argon.css') }}" type="text/css">
+
+  <script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" type="text/css">
+  <script>
+    function getBtnClick(){
+      $('#loading_div').css({'top': window.innerHeight / 2, 'left': window.innerWidth / 2}).show()
+      $.ajax({
+        url: '/get_product',
+        type: 'POST',
+        dataType: 'JSON',
+        data: {
+          mod: 'product',
+        },
+        success: function(data){
+          if(data){
+            location.reload()
+          }else{
+            alert('상품을 가져올 쇼핑몰이 없습니다.');
+            $('#loading_div').hide()
+            return
+          }
+        }
+      })
+    }
+
+    function confirmCheck(){
+      if($(this).attr('class') == 'toggle'){
+        let pro_idx = $(this).parents('tr').find('.pro_idx').val();
+        if(!$(this).is(':checked')){
+          if(confirm('활성 해제하시겠습니까?')){
+            $.ajax({
+              url: '/product_modify',
+              type: 'POST',
+              dataType: 'HTML',
+              data: {
+                pro_idx: pro_idx,
+                mod: 'activate',
+                pro_activate: 'false'
+              },
+              success: function(){
+                location.reload()
+              }
+            })
+          }else{
+            $(this).prop('checked', true)
+          }
+        }else{
+          $(this).prop('checked', false)
+          return
+        }
+      }else{
+        if($(this).attr('id') == 'chk_all'){
+          let checkbox = $('.check_box');
+          if($(this).is(':checked')){
+            for(let i=0; i<checkbox.length; i++){
+              checkbox[i].checked = true;
+            }
+          }else{
+            for(let i=0; i<checkbox.length; i++){
+              checkbox[i].checked = false;
+            }
+          }
+        }else{
+          let checkbox = $('.check_box');
+          let all_check = true;
+
+          for(let i=0; i<checkbox.length; i++){
+            if(!checkbox[i].checked){ all_check = false; }
+          }
+
+          if(all_check){
+            $('#chk_all').prop('checked', true);
+          }else{
+            $('#chk_all').prop('checked', false);
+          }
+        }
+      }
+    }
+
+    function proModBtnClick(){
+      let pro_idx = $(this).parents('tr').find('.pro_idx').val()
+
+      $.ajax({
+        url: '/product_modify',
+        type: 'POST',
+        dataType: 'JSON',
+        data: {
+          pro_idx: pro_idx,
+          mod: 'get',
+        },
+        success: function(data){
+          let form = document.forms['pro_form'];
+
+          form.pro_idx.value = data['pro_idx']
+          form.input_shop_name.value = data['shop_name']
+          form.input_pro_url.value = data['pro_url']
+
+          let pro_cate = JSON.parse(data['pro_cate'])
+          let cate_count = 0
+          $('.cate_list_wrap').children('span').remove()
+          for(key of Object.keys(pro_cate)){
+            for(i in pro_cate[key]){
+              cate_count++
+              $('.cate_list_wrap').append(`<span>${key} - ${pro_cate[key][i]}<input type="hidden" name="cate_${cate_count}" value="${key}-${pro_cate[key][i]}" class="category" /><button type="button" class="cate_delete" onclick="cateDelete(this)">X</button></span>`)
+            }
+          }
+          $('#cate_count').val(cate_count)
+          form.input_pro_title.value = data['pro_title']
+          form.input_pro_price.value = data['pro_price']
+          form.input_pro_activate.value = data['pro_activate']
+          if(data[7] == 'true'){
+            $('#activate_btn').removeClass('btn-secondary').addClass('btn-success').text('활성')
+          }else{
+            $('#activate_btn').removeClass('btn-success').addClass('btn-secondary').text('비활성')
+          }
+        }
+      })
+    }
+
+    function proDelBtnClick(){
+      let pro_idx = '';
+      if($(this).attr('id') == 'select_del'){
+        let check_box = $('.check_box:checked')
+        if(check_box.length < 1){
+          alert('삭제할 상품을 선택해주세요.');
+          return
+        }else{
+          if(confirm('삭제하시겠습니까?')){
+            for(let i=0; i<check_box.length; i++){
+              pro_idx += i == 0 ? $(check_box[i]).parents('tr').find('.pro_idx').val() : ', ' + $(check_box[i]).parents('tr').find('.pro_idx').val();
+            }
+          }else{
+            return;
+          }
+        }
+      }else{
+        if(confirm('삭제하시겠습니까?')){
+          pro_idx = $(this).parents('tr').find('.pro_idx').val();
+        }else{
+          return;
+        }
+      }
+      
+      $.ajax({
+        url: '/product_delete',
+        type: 'POST',
+        dataType: 'HTML',
+        data: {
+          pro_idx: pro_idx,
+        },
+        success: function(){
+          location.reload()
+        }
+      })
+    }
+
+    function activateBtnClick(){
+      let activate = $(this).prev('input').val()
+
+      if(activate == 'true'){
+        $(this).removeClass('btn-success').addClass('btn-secondary').text('비활성')
+        $(this).prev('input').val('false')
+      }else{
+        $(this).removeClass('btn-secondary').addClass('btn-success').text('활성')
+        $(this).prev('input').val('true')
+      }
+    }
+
+    function proFormOnSubmit(){
+      let form = document.forms['pro_form'];
+
+      if(form.input_proshopname.value == ''){
+        alert('쇼핑몰을 입력해주세요.');
+        form.input_proshopname.focus();
+        return false;
+      }
+      if(form.input_prourl.value == ''){
+        alert('URL을 입력해주세요.');
+        form.input_prourl.focus();
+        return false;
+      }
+      if(form.input_procate.value == ''){
+        alert('카테고리를 입력해주세요.');
+        form.input_procate.focus();
+        return false;
+      }
+      if(form.input_protitle.value == ''){
+        alert('상품명을 입력해주세요.');
+        form.input_protitle.focus();
+        return false;
+      }
+      if(form.input_proprice.value == ''){
+        alert('가격을 입력해주세요.');
+        form.input_proprice.focus();
+        return false;
+      }
+      if(form.input_proimg.value == ''){
+        alert('상품 이미지를 입력해주세요.');
+        form.input_proimg.focus();
+        return false;
+      }
+    }
+
+    function cateChange(){
+      $('.sub_cate').hide()
+      let cate = $(this).val()
+      if(cate == 'OUTER'){
+        $('#cate_outer').show()
+      }else if(cate == 'TOP'){
+        $('#cate_top').show()
+      }else if(cate == 'PANTS'){
+        $('#cate_pants').show()
+      }else if(cate == 'SKIRT'){
+        $('#cate_skirt').show()
+      }else if(cate == 'DRESS'){
+        $('#cate_dress').show()
+      }else if(cate == 'ETC'){
+        $('#cate_etc').show()
+      }
+    }
+
+    function cateAdd(){
+      let main_cate = $('#cate').val()
+      if(main_cate == ''){
+        alert('카테고리를 선택해주세요.');
+        return false
+      }
+
+      let sub_cate = $(`#cate_${main_cate.toLowerCase()}`).val()
+      if(sub_cate == ''){
+        alert('하위 카테고리를 선택해주세요.');
+        return false
+      }
+
+      let cate_count = Number($('#cate_count').val()) + 1
+
+      $('.cate_list_wrap').append(`<span>${main_cate} - ${sub_cate}<input type="hidden" name="cate_${cate_count}" value="${main_cate}-${sub_cate}" class="category" /><button class="cate_delete" type="button" onclick="cateDelete(this)">X</button></span>`);
+
+      $('#cate').children('option')[0].selected = true
+      $(`#cate_${main_cate.toLowerCase()}`).children('option')[0].selected = true
+
+      $('#cate_count').val(cate_count)
+    }
+
+    function cateDelete(e){
+      let cate_count = $('#cate_count').val() - 1
+
+      $(e).parents('span').remove()
+      $('#cate_count').val(cate_count)
+
+      for(let i=0; i<cate_count; i++){
+        $('.category')[i].setAttribute('name', `cate_${i+1}`)
+      }
+    }
+
+    function proListInit(){
+      $('input[type="checkbox"]').on('click', confirmCheck);
+      
+      $('.get_btn').on('click', getBtnClick)
+      $('.modify_btn').on('click', proModBtnClick)
+      $('.delete_btn').on('click', proDelBtnClick)
+      $('#activate_btn').on('click', activateBtnClick)
+
+      $('#cate').on('change', cateChange);
+      $('.cate_add').on('click', cateAdd);
+    }
+
+    $(document).ready(function(){
+      proListInit()
+    })
+  </script>
+</head>
+
+<body>
+  <nav class="sidenav navbar navbar-vertical  fixed-left  navbar-expand-xs navbar-light bg-white" id="sidenav-main">
+    <div class="scrollbar-inner">
+      <div class="sidenav-header  align-items-center">
+        <a class="navbar-brand" href="/">crawling</a>
+      </div>
+      <div class="navbar-inner">
+        <div class="collapse navbar-collapse" id="sidenav-collapse-main">
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" href="/shop_list">
+                <i class="ni ni-bag-17 text-default"></i>
+                <span class="nav-link-text">쇼핑몰</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="/product_list">
+                <i class="ni ni-bullet-list-67 text-default"></i>
+                <span class="nav-link-text">상품</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <div class="main-content" id="panel">
+    <nav class="navbar navbar-top navbar-expand navbar-dark bg-default border-bottom">
+      <div class="container-fluid">
+        <div class="collapse navbar-collapse" id="navbarSupportedContent" style="flex-direction: row-reverse;">
+          <nav aria-label="breadcrumb" class="d-none d-md-inline-block">
+            <ol class="breadcrumb breadcrumb-links breadcrumb-dark" style="padding: 0.3rem 0.8rem;">
+              <li class="breadcrumb-item" style="color: #172b4d;"><i class="fas fa-home"></i></li>
+              <li class="breadcrumb-item" style="color: #172b4d;">상품</li>
+              <li class="breadcrumb-item active" aria-current="page">상품 리스트</li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </nav>
+    <div class="header bg-default pb-6">
+      <div class="container-fluid">
+        <div class="header-body">
+          <div class="row align-items-center py-4">
+            <form class="navbar-search navbar-search-light form-inline col-lg-6 col-7" id="navbar-search-main" action="/product_list" method="GET">
+              <div class="form-group mb-0">
+                <div class="input-group input-group-alternative input-group-merge">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                  </div>
+                  <input class="form-control" placeholder="Search" type="text" name="find_keyword">
+                </div>
+              </div>
+            </form>
+            <div class="col-lg-6 col-5 text-right">
+              <a href="#" class="btn btn-secondary get_btn" id="get_product">상품 가져오기</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="container-fluid mt--6">
+      <div class="row">
+        <div class="col">
+          <div class="card">
+            <div class="card-header border-0">
+              <h3 class="mb-0" style="display: inline-block;">상품</h3>
+              <span style="float: right;">
+                <!-- <button type="button" class="btn btn-outline-default btn-sm get_btn" id="select_pro">선택 이미지 재 크롤링</button> -->
+                <button type="button" class="btn btn-outline-danger btn-sm delete_btn" id="select_del">선택 삭제</button>
+              </span>
+            </div>
+            <div class="table-responsive">
+              <table class="table align-items-center table-flush">
+                <thead class="thead-light">
+                  <tr>
+                    <th class="text-center" scope="col" width="3%"><input type="checkbox" id="chk_all"></th>
+                    <th class="text-center" scope="col" width="3%">번호</th>
+                    <th class="text-center" scope="col" width="10%">쇼핑몰</th>
+                    <th class="text-center" scope="col" width="20%">카테고리</th>
+                    <th class="text-center" scope="col" width="24%">상품명</th>
+                    <th class="text-center" scope="col" width="10%">가격</th>
+                    <th class="text-center" scope="col" width="10%">활성</th>
+                    <th class="text-center" scope="col" width="10%">등록일자</th>
+                    <th class="text-center" scope="col" width="10%"></th>
+                  </tr>
+                </thead>
+                <tbody class="list">
+                  {% if pro_list %}
+                    {% for product in pro_list %}
+                    <tr>
+                      <td><input type="checkbox" class="check_box"></td>
+                      <td class="text-center">{{ product_count - (((current_page - 1) * 20) + (loop.index - 1)) }}<input type="hidden" class="pro_idx" value="{{ product['pro_idx'] }}" /></td>
+                      <td class="text-center">{{ product['shop_name'] }}</td>
+                      <td class="text-center">
+                        {% set outer_loop = loop %}
+                        {% for key in pro_cate[loop.index-1] %}
+                          {% set inner_loop = loop %}
+                          {% for value in pro_cate[outer_loop.index-1][key] %}
+                            <span style="display: block;">{{ key }} - {{ value }}</span>
+                          {% endfor %}
+                        {% endfor %}
+                      </td>
+                      <td><a class="modify_btn" href="#" data-toggle="modal" data-target="#modal-form">{{ product['pro_title'] }}</a></td>
+                      <td class="text-center">{{ product['pro_price'] }}</td>
+                      <td class="text-center"><input type="checkbox" class="toggle" id="toggle_{{ product['pro_idx'] }}" style="display: none;"
+                        {% if product['pro_activate'] == 'true' %}
+                        checked
+                        {% endif %}
+                        /><label class="toggle_btn" for="toggle_{{ product['pro_idx'] }}"></label>
+                      </td>
+                      <td class="text-center">{{ product['pro_regdate'] }}</td>
+                      <td class="text-center">
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="location.href=`/product_view?pro_idx={{ product['pro_idx'] }}`">수정</button>
+                        <button type="button" class="btn btn-outline-danger btn-sm delete_btn">삭제</button>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  {% else %}
+                  <tr>
+                    <td colspan="9" class="text-center">상품 없음</td>
+                  </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+            <div class="card-footer py-4">
+              <ul class="pagination justify-content-center mb-0">
+                {% if pro_list %}
+                  {% if keyword %}
+                  <li class="page-item"><a class="page-link" href="{{ url_for('product_list', page=1, keyword=keyword) }}"><i class="far fa-chevron-double-left"></i></a></li>
+                  <li class="page-item
+                  {% if current_page == 1 %}
+                  disabled
+                  {% endif %}
+                  ">
+                    <a class="page-link" href="
+                    {% if current_page == 1 %}
+                    #
+                    {% else %}
+                    {{ url_for('product_list', page=current_page - 1, keyword=keyword) }}
+                    {% endif %}
+                    "><i class="fas fa-angle-left"></i></a>
+                  </li>
+                  {% for i in range(start_paging, end_paging + 1) %}
+                    <li class="page-item
+                    {% if i == current_page %}
+                    active
+                    {% endif %}
+                    "><a class="page-link" href="{{ url_for('product_list', page=i, keyword=keyword) }}">{{ i }}</a></li>
+                  {% endfor %}
+                  <li class="page-item
+                  {% if current_page == total_page %}
+                  disabled
+                  {% endif %}
+                  ">
+                    <a class="page-link" href="
+                    {% if current_page == total_page %}
+                    #
+                    {% else %}
+                    {{ url_for('product_list', page=current_page + 1, keyword=keyword) }}
+                    {% endif %}
+                    "><i class="fas fa-angle-right"></i></a>
+                  </li>
+                  <li class="page-item"><a class="page-link" href="{{ url_for('product_list', page=total_page, keyword=keyword) }}"><i class="far fa-chevron-double-right"></i></a></li>
+                  {% else %}
+                  <li class="page-item"><a class="page-link" href="{{ url_for('product_list', page=1) }}"><i class="far fa-chevron-double-left"></i></a></li>
+                  <li class="page-item
+                  {% if current_page == 1 %}
+                  disabled
+                  {% endif %}
+                  ">
+                    <a class="page-link" href="
+                    {% if current_page == 1 %}
+                    #
+                    {% else %}
+                    {{ url_for('product_list', page=current_page - 1) }}
+                    {% endif %}
+                    "><i class="fas fa-angle-left"></i></a>
+                  </li>
+                  {% for i in range(start_paging, end_paging + 1) %}
+                    <li class="page-item
+                    {% if i == current_page %}
+                    active
+                    {% endif %}
+                    "><a class="page-link" href="{{ url_for('product_list', page=i) }}">{{ i }}</a></li>
+                  {% endfor %}
+                  <li class="page-item
+                  {% if current_page == total_page %}
+                  disabled
+                  {% endif %}
+                  ">
+                    <a class="page-link" href="
+                    {% if current_page == total_page %}
+                    #
+                    {% else %}
+                    {{ url_for('product_list', page=current_page + 1) }}
+                    {% endif %}
+                    "><i class="fas fa-angle-right"></i></a>
+                  </li>
+                  <li class="page-item"><a class="page-link" href="{{ url_for('product_list', page=total_page) }}"><i class="far fa-chevron-double-right"></i></a></li>
+                  {% endif %}
+                {% endif %}
+              </ul>
+            </div>
+          </div>
+          <div class="modal fade" id="modal-form" tabindex="-1" role="dialog" aria-labelledby="modal-form" aria-hidden="true">
+            <div class="modal-dialog modal- modal-dialog-centered modal-" role="document" style="max-width: 1000px;">
+              <div class="modal-content">
+                <div class="modal-body p-0">
+                  <div class="card bg-secondary border-0 mb-0">
+                    <div class="card-body px-lg-5 py-lg-5">
+                      <div class="text-center text-muted mb-4">
+                          <h2>상품 수정</h2>
+                      </div>
+                      <form name="pro_form" method="POST" action="/product_modify" onsubmit="return proFormOnSubmit()">
+                        <input type="hidden" name="mod" value="info" />
+                        <input type="hidden" name="pro_idx" value="" />
+                        <div class="form-group">
+                          <label class="form-control-label">쇼핑몰</label>
+                          <input type="text" name="input_shop_name" class="form-control" value="" disabled>
+                        </div>
+                        <div class="form-group">
+                          <label class="form-control-label">URL</label>
+                          <input type="text" name="input_pro_url" class="form-control" value="">
+                        </div>
+                        <div class="form-group">
+                          <label class="form-control-label">카테고리</label>
+                          <div class="cate_wrap">
+                            <select class="form-control" id="cate" style="width: 16%;">
+                              <option value="">-------선택-------</option>
+                              <option value="OUTER">OUTER</option>
+                              <option value="TOP">TOP</option>
+                              <option value="PANTS">PANTS</option>
+                              <option value="SKIRT">SKIRT</option>
+                              <option value="DRESS">DRESS</option>
+                              <option value="ETC">ETC</option>
+                            </select>
+                            <select class="form-control sub_cate" id="cate_outer" style="display: none; width: 16%;">
+                              <option value="">-------선택-------</option>
+                              <option value="자켓">자켓</option>
+                              <option value="코트">코트</option>
+                              <option value="점퍼">점퍼</option>
+                              <option value="가디건">가디건</option>
+                              <option value="베스트">베스트</option>
+                              <option value="ETC">ETC</option>
+                            </select>
+                            <select class="form-control sub_cate" id="cate_top" style="display: none; width: 16%;">
+                              <option value="">-------선택-------</option>
+                              <option value="니트">니트</option>
+                              <option value="블라우스">블라우스</option>
+                              <option value="슬리브리스">슬리브리스</option>
+                              <option value="티셔츠">티셔츠</option>
+                              <option value="ETC">ETC</option>
+                            </select>
+                            <select class="form-control sub_cate" id="cate_pants" style="display: none; width: 16%;">
+                              <option value="">-------선택-------</option>
+                              <option value="청바지">청바지</option>
+                              <option value="반바지">반바지</option>
+                              <option value="슬랙스">슬랙스</option>
+                              <option value="이지팬츠">이지팬츠</option>
+                              <option value="트레이닝">트레이닝</option>
+                              <option value="레깅스">레깅스</option>
+                              <option value="ETC">ETC</option>
+                            </select>
+                            <select class="form-control sub_cate" id="cate_skirt" style="display: none; width: 16%;">
+                              <option value="">-------선택-------</option>
+                              <option value="치마">치마</option>
+                              <option value="ETC">ETC</option>
+                            </select>
+                            <select class="form-control sub_cate" id="cate_dress" style="display: none; width: 16%;">
+                              <option value="">-------선택-------</option>
+                              <option value="원피스">원피스</option>
+                              <option value="ETC">ETC</option>
+                            </select>
+                            <select class="form-control sub_cate" id="cate_etc" style="display: none; width: 16%;">
+                              <option value="">-------선택-------</option>
+                              <option value="ETC">ETC</option>
+                            </select>
+                            <button type="button" class="btn btn-outline-default btn-sm cate_add">추가</button>
+                            <div class="cate_list_wrap">
+                              <input type="hidden" id="cate_count" name="cate_count" value="" />
+                            </div>
+                        </div>
+                        <div class="form-group" style="width: 70%; display: inline-block; margin-right: 1%;">
+                          <label class="form-control-label">상품명</label>
+                          <input type="text" name="input_pro_title" class="form-control" value="">
+                        </div>
+                        <div class="form-group" style="width: 28%; display: inline-block;">
+                          <label class="form-control-label">가격</label>
+                          <input type="text" name="input_pro_price" class="form-control" value="">
+                        </div>
+                        <div class="form-group">
+                          <label class="form-control-label">활성</label>
+                          <div style="width: 100%;">
+                            <input type="hidden" name="input_pro_activate" value="" />
+                            <button type="button" class="btn" id="activate_btn"></button>
+                          </div>
+                        </div>
+                        <div class="text-center">
+                          <button type="button" class="btn btn-secondary mt-4" data-dismiss="modal">취소</button>
+                          <button type="submit" class="btn btn-default mt-4">수정</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="loading_div" style="position: fixed; top: 0%; left: 0%; display: none;"><img src="{{ url_for('static', filename='img/animation.gif') }}" /></div>
+  <!-- Argon Scripts -->
+  <!-- Core -->
+  <script src="{{ url_for('static', filename='vendor/jquery/dist/jquery.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/js-cookie/js.cookie.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/jquery.scrollbar/jquery.scrollbar.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/jquery-scroll-lock/dist/jquery-scrollLock.min.js') }}"></script>
+  <!-- Optional JS -->
+  <script src="{{ url_for('static', filename='vendor/chart.js/dist/Chart.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/chart.js/dist/Chart.extension.js') }}"></script>
+  <!-- Argon JS -->
+  <script src="{{ url_for('static', filename='js/argon.js') }}"></script>
+</body>
+
+</html>

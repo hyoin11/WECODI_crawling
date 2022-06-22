@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="./css/style.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script>
+        function init(){
+            let closetBtn = $('#closetBtn');
+            let modal = $('#myModal');
+            
+            closetBtn.on('click', function(){
+                modal.show().delay(3000).fadeOut(1000);
+            });
+
+            $(document).bind('touchstart', function(e){
+                if(e.target == document.getElementById('myModal')){
+                    modal.hide();
+                }
+            })
+        }
+
+        $(document).ready(init);
+    </script>
+</head>
+<body>
+    <div class="wrap">
+        <header id="header">
+            <a href="javascript:window.history.back();"><img src="./img/icon/back_btn.png" /></a>
+            <h3>검색된 관련 상품</h3>
+        </header>
+        <div id="detail_container">
+            <div id="main_img"><img src="https://roompacker.cdn.smart-img.com/html/2021/08/0823/04_1/21_08_23_4_1_z_01.jpg" /></div>
+            <div id="product_info">
+                <div>
+                    <p>[쵸퍼] 베이지 가디건</p>
+                    <p>120,000원</p>
+                </div>
+                <div>
+                    <a href="#">구매하러 가기</a><a id="closetBtn" href="#">내 옷장에 담기</a>
+                </div>
+            </div>
+            <div id="related_product">
+                <p>관련 상품</p>
+                <div id="related_list">
+                    <div><a href="#"><img src="https://www.miamasvin.co.kr/web/product/extra/big/202108/dd57074e54fc51b1101f47784f036143.jpg" /></a></div>
+                    <div><a href="#"><img src="https://cherry07.img12.kr/product/C2001SYVE5/d1.jpg" /></a></div>
+                    <div><a href="#"><img src="https://jstyle07.jpg3.kr/NEWJIMG/V/2021/08/0831/0831LHS02_Detail_01.jpg" /></a></div>
+                    <div><a href="#"><img src="http://kcompony7.jpg3.kr/web/pigment/2021/08/0823/mix_vest/s6003.jpg" /></a></div>
+                </div>
+            </div>
+        </div>
+        <div id="myModal" class="modal">
+            <div class="modal-content">
+                <div><i class="fas fa-check"></i></div>
+                <p>선택한 아이템이<br/>내 옷장에 저장되었습니다 :)</p>
+                <span>'마이페이지 > 내 옷장 관리' 에서 확인 해주세요.</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

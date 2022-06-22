@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="Start your development with a Dashboard for Bootstrap 4.">
+  <meta name="author" content="Creative Tim">
+  <title>Shop</title>
+  <!-- Favicon -->
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}" type="image/png">
+  <!-- Fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700">
+  <!-- Icons -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/nucleo/css/nucleo.css') }}" type="text/css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/@fortawesome/fontawesome-free/css/all.min.css') }}" type="text/css">
+  <!-- Page plugins -->
+  <!-- Argon CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/argon.css') }}" type="text/css">
+
+  <script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" type="text/css">
+  <script>
+    function shopFormOnSubmit(){
+      let form = document.forms['shop_form'];
+
+      if(form.input_shop_name.value == ''){
+        alert('쇼핑몰 이름을 입력해주세요.');
+        form.input_shop_name.focus();
+        return false;
+      }
+      if(form.input_shop_url.value == ''){
+        alert('쇼핑몰 URL을 입력해주세요.');
+        form.input_shop_url.focus();
+        return false;
+      }
+      let cateURL = $('[name^="input_cateURL_"]');
+      for(let i=0; i<cateURL.length; i++){
+        if(cateURL[i].value == ''){
+          alert('카테고리 URL을 입력해주세요.');
+          cateURL[i].focus();
+          return false;
+        }
+      }
+      if(form.input_pg_param.value == ''){
+        alert('페이지 파라미터를 입력해주세요.');
+        form.input_pg_param.focus();
+        return false;
+      }
+      if(form.input_container.value == ''){
+        alert('컨테이너 위치를 입력해주세요.');
+        form.input_container.focus();
+        return false;
+      }
+      if(form.input_list_elem.value == ''){
+        alert('리스트 위치를 입력해주세요.');
+        form.input_list_elem.focus();
+        return false;
+      }
+      if(form.input_name_elem.value == ''){
+        alert('상품 이름 위치를 입력해주세요.');
+        form.input_name_elem.focus();
+        return false;
+      }
+      if(form.input_price_elem.value == ''){
+        alert('상품 가격 위치를 입력해주세요.');
+        form.input_price_elem.focus();
+        return false;
+      }
+      if(form.input_img_elem.value == ''){
+        alert('상품 상세페이지 위치를 입력해주세요.');
+        form.input_img_elem.focus();
+        return false;
+      }
+
+      if($('#submit').text() == '등록'){
+        let is_submit = false
+        $.ajax({
+          url: '/shop_check',
+          type: 'POST',
+          dataType: 'JSON',
+          data: {
+            url: form.input_shop_url.value
+          },
+          async: false,
+          success: function(data){
+            if(data){
+              is_submit = true;
+            }
+          }
+        })
+        if(!is_submit){
+          alert('이미 등록된 쇼핑몰입니다.')
+          return false
+        }
+      }
+    }
+
+    function preventSubmit(e){
+      if(e.keyCode == 13){
+        e.preventDefault()
+        return false;
+      }
+    }
+
+    function shopAddInit(){
+      $('input').keydown(preventSubmit);
+
+      $('.cate_add').on('click', function(){
+        let cateURL_num = parseInt($('[name="cateURL_count"]').val()) + 1;
+        $('[name="cateURL_count"]').val(cateURL_num);
+
+        let cate_wrap = `<div class="cate_wrap"><select class="form-control" name="input_cate_${cateURL_num}"><option value="">-------선택-------</option><option value="OUTER">OUTER</option><option value="TOP">TOP</option><option value="PANTS">PANTS</option><option value="SKIRT">SKIRT</option><option value="DRESS">DRESS</option><option value="ETC">ETC</option></select><input type="text" name="input_cateURL_${cateURL_num}" class="form-control cate_input" value=""><button type="button" class="btn btn-danger btn-sm cate_delete">X</button></div>`;
+        
+        $(this).parent().append(cate_wrap);
+      })
+
+      $(document).on('click', '.cate_delete', function(){
+        let cateURL_num = parseInt($('[name="cateURL_count"]').val()) - 1;
+        $('[name="cateURL_count"]').val(cateURL_num);
+
+        $(this).parent().remove();
+
+        for(let i=1; i<cateURL_num; i++){
+          $('.cate_wrap').eq(i).children('input').attr({'name': 'input_cateURL_' + (i + 1)})
+          $('.cate_wrap').eq(i).children('select').attr({'name': 'input_cate_' + (i + 1)})
+        }
+      })
+    }
+
+    $(document).ready(function(){
+      shopAddInit()
+    })
+  </script>
+</head>
+
+<body>
+  <nav class="sidenav navbar navbar-vertical  fixed-left  navbar-expand-xs navbar-light bg-white" id="sidenav-main">
+    <div class="scrollbar-inner">
+      <div class="sidenav-header  align-items-center">
+        <a class="navbar-brand" href="/">crawling</a>
+      </div>
+      <div class="navbar-inner">
+        <div class="collapse navbar-collapse" id="sidenav-collapse-main">
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link active" href="/shop_list">
+                <i class="ni ni-bag-17 text-default"></i>
+                <span class="nav-link-text">쇼핑몰</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/product_list">
+                <i class="ni ni-bullet-list-67 text-default"></i>
+                <span class="nav-link-text">상품</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <div class="main-content" id="panel">
+    <nav class="navbar navbar-top navbar-expand navbar-dark bg-default border-bottom">
+      <div class="container-fluid">
+        <div class="collapse navbar-collapse" id="navbarSupportedContent" style="flex-direction: row-reverse;">
+          <nav aria-label="breadcrumb" class="d-none d-md-inline-block">
+            <ol class="breadcrumb breadcrumb-links breadcrumb-dark" style="padding: 0.3rem 0.8rem;">
+              <li class="breadcrumb-item" style="color: #172b4d;"><i class="fas fa-home"></i></li>
+              <li class="breadcrumb-item" style="color: #172b4d;">쇼핑몰</li>
+              <li class="breadcrumb-item active" aria-current="page">
+                쇼핑몰
+                {% if shop_modify %}
+                수정
+                {% else %}
+                추가
+                {% endif %}
+              </li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </nav>
+    <div class="container-fluid mt-5">
+      <div class="card border-0">
+        <div class="card-body px-lg-5 py-lg-5">
+          {% if shop_modify %}
+          <div class="text-center text-default mb-4">
+            <h2>쇼핑몰 수정</h2>
+          </div>
+          <form name="shop_form" method="POST" action="/shop_modify" onsubmit="return shopFormOnSubmit()">
+            <input type="hidden" name="input_shop_idx" value="{{ shop_idx }}" />
+            <div class="form-group">
+              <label class="form-control-label">쇼핑몰 이름</label>
+              <input type="text" name="input_shop_name" class="form-control" value="{{ shop_info['shop_name'] }}">
+            </div>
+            <div class="form-group">
+              <label class="form-control-label">쇼핑몰 URL</label>
+              <input type="text" name="input_shop_url" class="form-control" value="{{ shop_info['shop_url'] }}">
+            </div>
+            <div class="form-group">
+              <label class="form-control-label">카테고리별 URL</label>
+              <button type="button" class="btn btn-outline-warning btn-sm cate_add" style="float: right;">+추가</button>
+              <input type="hidden" name="cateURL_count" value=""/>
+              {% for cate in shop_cate_url %}
+                {% for url in shop_cate_url[cate] %}
+                <div class="cate_wrap">
+                  <select class="form-control" name="input_cate_{{ loop.index }}">
+                    <option value="">-------선택-------</option>
+                    <option value="OUTER"
+                      {% if cate == 'OUTER' %} selected {% endif %}
+                    >OUTER</option>
+                    <option value="TOP"
+                      {% if cate == 'TOP' %} selected {% endif %}
+                    >TOP</option>
+                    <option value="PANTS"
+                      {% if cate == 'PANTS' %} selected {% endif %}
+                    >PANTS</option>
+                    <option value="SKIRT"
+                      {% if cate == 'SKIRT' %} selected {% endif %}
+                    >SKIRT</option>
+                    <option value="DRESS"
+                      {% if cate == 'DRESS' %} selected {% endif %}
+                    >DRESS</option>
+                    <option value="ETC"
+                      {% if cate == 'ETC' %} selected {% endif %}
+                    >ETC</option>
+                  </select>
+                  <input type="text" name="input_cateURL_{{ loop.index }}" class="form-control cate_input" value="{{ url }}">
+                  <button type="button" class="btn btn-danger btn-sm cate_delete">X</button>
+                </div>
+                {% endfor %}
+              {% endfor %}
+            </div>
+            <script>
+              $('[name="cateURL_count"]').val($('[name^="input_cate_"]').length)
+              $('.cate_delete').eq(0).css('display', 'none')
+
+              let cate_wrap =  $('.cate_wrap');
+              for(let i=0; i<cate_wrap.length; i++){
+                $('.cate_wrap').eq(i).children('input').attr({'name': 'input_cateURL_' + (i + 1)})
+                $('.cate_wrap').eq(i).children('select').attr({'name': 'input_cate_' + (i + 1)})
+              }
+            </script>
+            <div class="form-group wd33" style="margin-left: 0;">
+              <label class="form-control-label">페이지 파라미터</label>
+              <input type="text" name="input_pg_param" class="form-control" value="{{ shop_info['pg_param'] }}">
+            </div>
+            <div class="form-group wd33">
+              <label class="form-control-label">container 위치</label>
+              <input type="hidden" name="input_container_idx" value="{{ item_container[0] }}">
+              <input type="text" name="input_container" class="form-control" value="{{ item_container[1] }}">
+            </div>
+            <div class="form-group wd33">
+              <label class="form-control-label">list 위치</label>
+              <input type="hidden" name="input_list_elem_idx" value="{{ item_list_elem[0] }}">
+              <input type="text" name="input_list_elem" class="form-control" value="{{ item_list_elem[1] }}">
+            </div>
+            <div class="form-group wd33" style="margin-left: 0;">
+              <label class="form-control-label">상세페이지 이름 위치</label>
+              <input type="hidden" name="input_name_elem_idx" value="{{ item_detail_elem['name_elem'][0] }}">
+              <input type="text" name="input_name_elem" class="form-control" value="{{ item_detail_elem['name_elem'][1] }}">
+            </div>
+            <div class="form-group wd33">
+              <label class="form-control-label">상세페이지 가격 위치</label>
+              <input type="hidden" name="input_price_elem_idx" value="{{ item_detail_elem['price_elem'][0] }}">
+              <input type="text" name="input_price_elem" class="form-control" value="{{ item_detail_elem['price_elem'][1] }}">
+            </div>
+            <div class="form-group wd33">
+              <label class="form-control-label">상세페이지 이미지 위치</label>
+              <input type="hidden" name="input_img_elem_idx" value="{{ item_detail_elem['img_elem'][0] }}">
+              <input type="text" name="input_img_elem" class="form-control" value="{{ item_detail_elem['img_elem'][1] }}">
+            </div>
+            <div class="text-center">
+              <button type="button" class="btn btn-secondary mt-4" onclick="history.back()">취소</button>
+              <button class="btn btn-default mt-4" id="submit">수정</button>
+            </div>
+          </form>
+          {% else %}
+          <div class="text-center text-default mb-4">
+            <h2>쇼핑몰 등록</h2>
+          </div>
+          <form name="shop_form" method="POST" action="/shop_add" onsubmit="return shopFormOnSubmit();">
+            <div class="form-group">
+              <label class="form-control-label">쇼핑몰 이름</label>
+              <input type="text" name="input_shop_name" class="form-control" value="">
+            </div>
+            <div class="form-group">
+              <label class="form-control-label">쇼핑몰 URL</label>
+              <input type="text" name="input_shop_url" class="form-control" value="">
+            </div>
+            <div class="form-group">
+              <label class="form-control-label">카테고리별 URL</label>
+              <input type="hidden" name="cateURL_count" value="1"/>
+              <button type="button" class="btn btn-outline-warning btn-sm cate_add" style="float: right;">+추가</button>
+              <div class="cate_wrap">
+                <select class="form-control" name="input_cate_1">
+                  <option value="">-------선택-------</option>
+                  <option value="OUTER">OUTER</option>
+                  <option value="TOP">TOP</option>
+                  <option value="PANTS">PANTS</option>
+                  <option value="SKIRT">SKIRT</option>
+                  <option value="DRESS">DRESS</option>
+                  <option value="ETC">ETC</option>
+                </select>
+                <input type="text" name="input_cateURL_1" class="form-control cate_input" value="">
+                <button type="button" class="btn btn-danger btn-sm cate_delete" style="display: none;">X</button>
+              </div>
+            </div>
+            <div class="form-group wd33" style="margin-left: 0;">
+              <label class="form-control-label">페이지 파라미터</label>
+              <input type="text" name="input_pg_param" class="form-control" value="">
+            </div>
+            <div class="form-group wd33">
+              <label class="form-control-label">container 위치</label>
+              <input type="text" name="input_container" class="form-control" value="">
+            </div>
+            <div class="form-group wd33">
+              <label class="form-control-label">list 위치</label>
+              <input type="text" name="input_list_elem" class="form-control" value="">
+            </div>
+            <div class="form-group wd33" style="margin-left: 0;">
+              <label class="form-control-label">상세페이지 상품 이름 위치</label>
+              <input type="text" name="input_name_elem" class="form-control" value="">
+            </div>
+            <div class="form-group wd33">
+              <label class="form-control-label">상세페이지 가격 위치</label>
+              <input type="text" name="input_price_elem" class="form-control" value="">
+            </div>
+            <div class="form-group wd33">
+              <label class="form-control-label">상세페이지 이미지 위치</label>
+              <input type="text" name="input_img_elem" class="form-control" value="">
+            </div>
+            <div class="text-center">
+              <button type="button" class="btn btn-secondary mt-4" onclick="history.back()">취소</button>
+              <button type="submit" class="btn btn-default mt-4" id="submit">등록</button>
+            </div>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Argon Scripts -->
+  <!-- Core -->
+  <script src="{{ url_for('static', filename='vendor/jquery/dist/jquery.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/js-cookie/js.cookie.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/jquery.scrollbar/jquery.scrollbar.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/jquery-scroll-lock/dist/jquery-scrollLock.min.js') }}"></script>
+  <!-- Optional JS -->
+  <script src="{{ url_for('static', filename='vendor/chart.js/dist/Chart.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/chart.js/dist/Chart.extension.js') }}"></script>
+  <!-- Argon JS -->
+  <script src="{{ url_for('static', filename='js/argon.js') }}"></script>
+</body>
+
+</html>
